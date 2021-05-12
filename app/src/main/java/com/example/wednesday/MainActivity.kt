@@ -46,12 +46,7 @@ class MainActivity : AppCompatActivity() {
             }
             true
         }
-    }
 
-    private fun search() {
-        progressBarLoading.visibility=View.VISIBLE
-        val name: String = binding.searchEditText.text.toString()
-        viewModel.getArtistSongs(name)
 
         viewModel.artistSongs.observe(this, Observer { response ->
             songsList.clear()
@@ -72,6 +67,14 @@ class MainActivity : AppCompatActivity() {
             }
             progressBarLoading.visibility=View.GONE
         })
+    }
+
+    private fun search() {
+        progressBarLoading.visibility=View.VISIBLE
+        val name: String = binding.searchEditText.text.toString()
+        viewModel.getArtistSongs(name)
+
+
     }
 
     private fun addToDatabase (artistName: String?, trackName: String?, collectionName: String?, image: String?, runtime: Long?, id: Int = 0) {
