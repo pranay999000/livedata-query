@@ -8,7 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class SongsViewModel(application: Application): AndroidViewModel(application) {
-    private val readAllData: LiveData<List<Songs>>
+    private val readAllData: List<Songs>
     private val repository: SongsRepository
 
     init {
@@ -17,9 +17,13 @@ class SongsViewModel(application: Application): AndroidViewModel(application) {
         readAllData = repository.realAllData
     }
 
-    fun addSongs(songs: Songs) {
+    fun addSongs(songs: List<Songs>) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.addSongs(songs)
         }
+    }
+
+    fun getArtist(): List<Songs> {
+        return readAllData
     }
 }

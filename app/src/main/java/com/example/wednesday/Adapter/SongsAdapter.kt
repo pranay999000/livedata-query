@@ -2,46 +2,46 @@ package com.example.wednesday.Adapter
 
 import android.content.Context
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseAdapter
-import com.example.wednesday.R
+import androidx.recyclerview.widget.RecyclerView
+import com.example.wednesday.Database.Songs
+import com.example.wednesday.databinding.SongsItemBinding
 import com.example.wednesday.model.Artist
 import com.squareup.picasso.Picasso
-import kotlinx.android.synthetic.main.songs_item.view.*
-import java.util.concurrent.TimeUnit
 
-class SongsAdapter(private var context: Context?, private var list: ArrayList<Artist>?) : BaseAdapter() {
+class SongsAdapter(private var context: Context?, private var list: ArrayList<Songs>):
+    RecyclerView.Adapter<SongsAdapter.ViewHolder>() {
 
+        inner class ViewHolder (val binding: SongsItemBinding): RecyclerView.ViewHolder(binding.root)
 
-    override fun getCount(): Int {
-        return list!!.size
+    fun fillData(list: ArrayList<Songs>) {
+        this.list.clear()
+        this.list = list
+        notifyDataSetChanged()
     }
 
-    override fun getItem(position: Int): Artist? {
-        return list?.get(position)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        return ViewHolder(SongsItemBinding.inflate(LayoutInflater.from(parent.context), parent, false))
     }
 
-    override fun getItemId(position: Int): Long {
-        return position.toLong()
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        with (holder) {
+            with (list[position]) {
+                binding.titleText.text = trackName
+                binding.artistName.text = artistName
+
+                val milliSeconds: Long? = trackTimeMillis
+                val minutes = milliSeconds!! / 1000 / 60
+                val seconds = milliSeconds / 1000 % 60
+
+                binding.runTime.text = String.format("%2d:%d", minutes, seconds)
+                Picasso.get().load(artworkUrl100).into(binding.songImageView)
+            }
+        }
     }
 
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-        val song = this.list?.get(position)
-
-        val inflater = context!!.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        val view = inflater.inflate(R.layout.songs_item, null)
-
-        val milliSeconds: Long = song!!.trackTimeMillis
-        val minutes = milliSeconds / 1000 / 60
-        val seconds = milliSeconds / 1000 % 60
-
-        Picasso.get().load(song.artworkUrl100).into(view.song_imageView)
-        view.artist_name.text = song.artistName
-        view.title_text.text = song.trackName
-        view.run_time.text =  String.format("%2d:%d", minutes, seconds)
-//        view.run_time.text = "hello"
-
-        return view
+    override fun getItemCount(): Int {
+        return list.size
     }
+
 }

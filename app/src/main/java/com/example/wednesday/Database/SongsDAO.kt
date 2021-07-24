@@ -5,12 +5,13 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.example.wednesday.model.Artist
 
 @Dao
 interface SongsDAO {
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun addSongs(songs: Songs)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun addSongs(songs: List<Songs>)
 
     @Query("SELECT * FROM songs_table ORDER BY id ASC")
-    fun readAllSongs(): LiveData<List<Songs>>
+    fun readAllSongs(): List<Songs>
 }

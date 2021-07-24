@@ -24,7 +24,7 @@ abstract class SongsDatabase: RoomDatabase() {
                     context.applicationContext,
                     SongsDatabase::class.java,
                     "songs_table"
-                ).build()
+                ).allowMainThreadQueries().build()
                 INSTANCE = instance
                 return instance
             }

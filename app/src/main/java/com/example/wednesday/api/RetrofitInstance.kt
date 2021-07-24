@@ -10,7 +10,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
     private val retrofit by lazy {
-
         Retrofit.Builder().baseUrl(itunes_url).addConverterFactory(GsonConverterFactory.create()).client(getLogInterceptor()).build()
     }
 
@@ -21,7 +20,7 @@ object RetrofitInstance {
     private fun getLogInterceptor(): OkHttpClient {
         val clintBuilder: OkHttpClient.Builder = OkHttpClient.Builder()
         if (BuildConfig.DEBUG) {
-            val interceptor: HttpLoggingInterceptor = HttpLoggingInterceptor()
+            val interceptor = HttpLoggingInterceptor()
             interceptor.setLevel(HttpLoggingInterceptor.Level.BASIC)
             clintBuilder.addInterceptor(interceptor)
         }

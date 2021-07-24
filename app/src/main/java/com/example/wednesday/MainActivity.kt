@@ -1,44 +1,56 @@
 package com.example.wednesday
 
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.GridLayoutManager
 import com.example.wednesday.Adapter.SongsAdapter
 import com.example.wednesday.Database.Songs
-import com.example.wednesday.Database.SongsViewModel
 import com.example.wednesday.databinding.ActivityMainBinding
-import com.example.wednesday.model.Artist
+import com.example.wednesday.repository.MainViewModel
 import com.example.wednesday.repository.MainViewModelFactory
 import com.example.wednesday.repository.Repository
-import kotlinx.android.synthetic.main.activity_main.*
+import okhttp3.internal.notify
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), MainViewModel.Listen {
 
     private lateinit var viewModel: MainViewModel
     private lateinit var binding: ActivityMainBinding
-    private lateinit var songsViewModel: SongsViewModel
 
-    private var songsList = ArrayList<Artist>()
-    private val adapter by lazy { SongsAdapter(this, songsList) }
+    private lateinit var name: String
 
+    private var songsList = ArrayList<Songs>()
+    private lateinit var adapter: SongsAdapter
+
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val repository = Repository()
-        val viewModelFactory = MainViewModelFactory(repository)
+        init()
+
+        val repository = Repository(application)
+        val viewModelFactory = MainViewModelFactory(repository, this, this)
         viewModel = ViewModelProvider(this, viewModelFactory).get(MainViewModel::class.java)
 
-        songsViewModel = ViewModelProvider.AndroidViewModelFactory(application).create(SongsViewModel::class.java)
+    }
 
-        binding.searchButton.setOnClickListener {
-            search()
-        }
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun init() {
+        val gridLayoutManager = GridLayoutManager(this, 2, GridLayoutManager.VERTICAL, false)
+        adapter = SongsAdapter(this, songsList)
+
+        binding.songsGrid.layoutManager = gridLayoutManager
+        binding.songsGrid.setHasFixedSize(true)
+        binding.songsGrid.adapter = adapter
 
         binding.searchEditText.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
@@ -46,37 +58,34 @@ class MainActivity : AppCompatActivity() {
             }
             true
         }
+
+        binding.searchButton.setOnClickListener {
+            search()
+        }
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun search() {
-        progressBarLoading.visibility=View.VISIBLE
-        val name: String = binding.searchEditText.text.toString()
+        name = binding.searchEditText.text.toString()
         viewModel.getArtistSongs(name)
-
-        viewModel.artistSongs.observe(this, Observer { response ->
-            songsList.clear()
-            if (response.isSuccessful) {
-                Toast.makeText(this, "Hate", Toast.LENGTH_SHORT).show()
-                val tempSongsList = (response.body()!!.getArtistList() as ArrayList<Artist>?)!!
-                songsList.addAll(tempSongsList)
-
-                for (i in tempSongsList) {
-                    addToDatabase(i.artistName, i.trackName, i.collectionName, i.artworkUrl100, i.trackTimeMillis)
-                }
-
-                binding.songsGrid.adapter = adapter
-                adapter.notifyDataSetChanged()
-
-            } else {
-                Toast.makeText(this, response.code().toString(), Toast.LENGTH_SHORT).show()
-            }
-            progressBarLoading.visibility=View.GONE
-        })
+        searchInDatabase("activity")
     }
 
-    private fun addToDatabase (artistName: String?, trackName: String?, collectionName: String?, image: String?, runtime: Long?, id: Int = 0) {
-        val song = Songs(id, artistName, trackName, collectionName, image, runtime)
-        songsViewModel.addSongs(song)
-//        Toast.makeText(this, song.collectionName, Toast.LENGTH_SHORT).show()
+    private fun fillSongs(from: String) {
+        Toast.makeText(this, from, Toast.LENGTH_SHORT).show()
+        songsList.clear()
+        songsList = viewModel.getArtistFromRoom(name)
+
+        Log.d("main", songsList.toString())
+        if (songsList.isNotEmpty()) {
+            binding.nothingFoundTest.visibility = View.GONE
+        } else {
+            binding.nothingFoundTest.visibility = View.VISIBLE
+        }
+        adapter.fillData(songsList)
+    }
+
+    override fun searchInDatabase(from: String) {
+        fillSongs(from)
     }
 }
