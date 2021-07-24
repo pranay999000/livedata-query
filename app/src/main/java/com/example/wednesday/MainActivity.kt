@@ -6,9 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.wednesday.Adapter.SongsAdapter
@@ -17,9 +15,8 @@ import com.example.wednesday.databinding.ActivityMainBinding
 import com.example.wednesday.repository.MainViewModel
 import com.example.wednesday.repository.MainViewModelFactory
 import com.example.wednesday.repository.Repository
-import okhttp3.internal.notify
 
-class MainActivity : AppCompatActivity(), MainViewModel.Listen {
+class MainActivity : AppCompatActivity() {
 
     private lateinit var viewModel: MainViewModel
     private lateinit var binding: ActivityMainBinding
@@ -38,8 +35,16 @@ class MainActivity : AppCompatActivity(), MainViewModel.Listen {
         init()
 
         val repository = Repository(application)
-        val viewModelFactory = MainViewModelFactory(repository, this, this)
+        val viewModelFactory = MainViewModelFactory(repository, this)
         viewModel = ViewModelProvider(this, viewModelFactory).get(MainViewModel::class.java)
+
+        viewModel.getArtistFromRoom().observe(this, { response ->
+            songsList.clear()
+            if (response != null && response.isNotEmpty() && ::name.isInitialized) {
+                songsList.addAll(response)
+                fillSongs(name)
+            }
+        })
 
     }
 
@@ -68,24 +73,25 @@ class MainActivity : AppCompatActivity(), MainViewModel.Listen {
     private fun search() {
         name = binding.searchEditText.text.toString()
         viewModel.getArtistSongs(name)
-        searchInDatabase("activity")
+        fillSongs(name)
     }
 
     private fun fillSongs(from: String) {
-        Toast.makeText(this, from, Toast.LENGTH_SHORT).show()
-        songsList.clear()
-        songsList = viewModel.getArtistFromRoom(name)
+//        Toast.makeText(this, from, Toast.LENGTH_SHORT).show()
+
+        val foundList: ArrayList<Songs> = ArrayList()
+        for (artist in songsList) {
+            if (artist.artistName?.toLowerCase().equals(from.toLowerCase())) {
+                foundList.add(artist)
+            }
+        }
 
         Log.d("main", songsList.toString())
-        if (songsList.isNotEmpty()) {
+        if (foundList.isNotEmpty()) {
             binding.nothingFoundTest.visibility = View.GONE
         } else {
             binding.nothingFoundTest.visibility = View.VISIBLE
         }
-        adapter.fillData(songsList)
-    }
-
-    override fun searchInDatabase(from: String) {
-        fillSongs(from)
+        adapter.fillData(foundList)
     }
 }

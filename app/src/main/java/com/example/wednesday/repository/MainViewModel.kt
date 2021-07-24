@@ -1,31 +1,22 @@
 package com.example.wednesday.repository
 
-import android.app.Activity
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.Log
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.wednesday.Adapter.SongsAdapter
 import com.example.wednesday.Database.Songs
-import com.example.wednesday.MainActivity
-import com.example.wednesday.model.Artist
 import com.example.wednesday.model.SearchResultModel
-import com.example.wednesday.repository.Repository
 import kotlinx.coroutines.launch
 import retrofit2.Response
-import java.util.*
 import kotlin.collections.ArrayList
 
-class MainViewModel(private val repository: Repository, var context: Context, activity: Activity): ViewModel() {
+class MainViewModel(private val repository: Repository, var context: Context): ViewModel() {
     lateinit var artistSongs: LiveData<List<Songs>>
-    private var listen: Listen = activity as Listen
 
     @RequiresApi(Build.VERSION_CODES.M)
     fun getArtistSongs(term: String) {
@@ -51,30 +42,12 @@ class MainViewModel(private val repository: Repository, var context: Context, ac
                 Log.d("array", artistList.toString())
                 repository.insert(artistList)
 
-                listen.searchInDatabase("model")
-
             }
         }
     }
 
-    fun getArtistFromRoom(name: String): ArrayList<Songs> {
-        val responseList = repository.getAllArtists()
-        val foundList: ArrayList<Songs> = ArrayList()
-        Log.d("name", responseList.toString())
-        for (artist in responseList) {
-            Log.d("name", "for loop")
-            if (artist.artistName?.toLowerCase()?.contains(name.toLowerCase())!!) {
-                Log.d("name", name)
-                foundList.add(artist)
-            }
-        }
-
-        Log.d("found", foundList.toString())
-        return foundList
-    }
-
-    interface Listen {
-        fun searchInDatabase(from: String)
+    fun getArtistFromRoom(): LiveData<List<Songs>> {
+        return repository.getAllArtists()
     }
 
 }
